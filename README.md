@@ -7,7 +7,7 @@
 
 ## Git Repository
 This repository is publicly accessible and contains the complete Playwright project:  
-https://github.com/wenushiwijerathna/IT23646810-ITPM-Assignment-1.git
+https://github.com/wenushiwijerathna/IT23682078-ITPM-Assignment-1.git
 
 ## Project Overview
 This project demonstrates basic test automation using Playwright. The test cases were first designed and documented in an Excel sheet, and selected scenarios were automated using Playwright. The system under test is a **Singlish to Sinhala translation web application (SwiftTranslator).**
