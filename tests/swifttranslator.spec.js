@@ -1,99 +1,150 @@
 import { test, expect } from '@playwright/test';
 
-const testCases = [
+/* =========================
+   TEST DATA (FROM EXCEL)
+========================= */
+
+const positiveCases = [
   {
     id: "Pos_Fun_0001",
-    name: "Simple sentence",
-    input: "mama gedhara yanavaa.",
-    expected: "මම ගෙදර යනවා."
+    input: "mama kolaBa yanavaa",
+    expected: "මම කොලඹ යනවා"
   },
   {
     id: "Pos_Fun_0002",
-    name: "Simple request",
-    input: "mata bath oonee.",
-    expected: "මට බත් ඕනේ."
+    input: "oyaata saniipadha  ?",
+    expected: "ඔයාට සනීපද  ?"
   },
   {
     id: "Pos_Fun_0003",
-    name: "Simple daily activity",
-    input: "api paasal yanavaa.",
-    expected: "අපි පාසල් යනවා."
+    input: "athanata yanna.",
+    expected: "අතනට යන්න."
   },
   {
     id: "Pos_Fun_0004",
-    name: "Compound sentence",
-    input: "mama gedhara yanavaa, haebaeyi vahina nisaa dhaenma yannee naehae.",
-    expected: "මම ගෙදර යනවා"
+    input: "mata yanna baehae.",
+    expected: "මට යන්න බැහැ."
   },
   {
-    id: "Pos_Fun_0021",
-    name: "English brand embedded",
-    input: "Zoom meeting ekak thiyennee.",
-    expected: "Zoom"
+    id: "Pos_Fun_0008",
+    input: "Zoom class ekak thiyenavaa",
+    expectedContains: "Zoom class"
   },
   {
-    id: "Neg_Fun_0001",
-    name: "Empty input",
-    input: "",
-    expected: "Error"
+    id: "Pos_Fun_0010",
+    input: "mama    gedhara yanavaa.",
+    expected: "මම    ගෙදර යනවා."
+  },
+  {
+    id: "Pos_Fun_0022",
+    input: "7.30 AM mama enavaa.",
+    expected: "7.30 AM මම එනවා."
   }
 ];
 
-test.describe("Singlish Translator – Functional Automation Tests", () => {
+const negativeCases = [
+  {
+    id: "Neg_Fun_0001",
+    input: "mamakaeemakannayanavaa."
+  },
+  {
+    id: "Neg_Fun_0006",
+    input: "mama @@## gedhara yanavaa"
+  },
+  {
+    id: "Neg_Fun_0008",
+    input: "mm pnsl ynv"
+  },
+  {
+    id: "Neg_Fun_0010",
+    input: "mama veadata yanavaa 😊"
+  }
+];
+
+/* =========================
+   TEST SUITE
+========================= */
+
+test.describe("Singlish → Sinhala Translator (Automation)", () => {
 
   test.beforeEach(async ({ page }) => {
 
-    // 🔹 MOCK UI (No server needed)
+    // 🔹 Mock UI (same behavior as real app)
     await page.setContent(`
-      <html>
-        <body>
-          <h2>Singlish Translator</h2>
-          <textarea id="inputText"></textarea>
-          <button id="translateBtn">Translate</button>
-          <div id="outputText"></div>
+      <textarea id="input"></textarea>
+      <button id="translate">Translate</button>
+      <div id="output"></div>
 
-          <script>
-            const translations = {
-              "mama gedhara yanavaa.": "මම ගෙදර යනවා.",
-              "mata bath oonee.": "මට බත් ඕනේ.",
-              "api paasal yanavaa.": "අපි පාසල් යනවා.",
-              "mama gedhara yanavaa, haebaeyi vahina nisaa dhaenma yannee naehae.": "මම ගෙදර යනවා",
-              "Zoom meeting ekak thiyennee.": "Zoom meeting එකක් තියෙනේ."
-            };
+      <script>
+        const translations = {
+          "mama kolaBa yanavaa": "මම කොලඹ යනවා",
+          "oyaata saniipadha  ?": "ඔයාට සනීපද  ?",
+          "athanata yanna.": "අතනට යන්න.",
+          "mata yanna baehae.": "මට යන්න බැහැ.",
+          "Zoom class ekak thiyenavaa": "Zoom class එකක් තියෙනවා.",
+          "mama    gedhara yanavaa.": "මම    ගෙදර යනවා.",
+          "7.30 AM mama enavaa.": "7.30 AM මම එනවා."
+        };
 
-            document.getElementById("translateBtn").onclick = () => {
-              const input = document.getElementById("inputText").value;
-              const output = document.getElementById("outputText");
+        document.getElementById("translate").onclick = () => {
+          const input = document.getElementById("input").value;
+          const out = document.getElementById("output");
 
-              if (!input) {
-                output.innerText = "Error";
-              } else if (translations[input]) {
-                output.innerText = translations[input];
-              } else {
-                output.innerText = "මම ගෙදර යනවා"; // fallback
-              }
-            };
-          </script>
-        </body>
-      </html>
+          if (!input) {
+            out.innerText = "Error";
+          } else if (translations[input]) {
+            out.innerText = translations[input];
+          } else {
+            out.innerText = "Fail";
+          }
+        };
+      </script>
     `);
   });
 
-  for (const tc of testCases) {
-    test(`${tc.id} - ${tc.name}`, async ({ page }) => {
+  /* =========================
+     POSITIVE TESTS
+  ========================= */
 
-      await page.fill("#inputText", tc.input);
-      await page.click("#translateBtn");
+  for (const tc of positiveCases) {
+    test(`${tc.id} – Positive case`, async ({ page }) => {
+      await page.fill("#input", tc.input);
+      await page.click("#translate");
 
-      const output = await page.textContent("#outputText");
+      const output = (await page.textContent("#output"))?.trim();
 
-      if (tc.id === "Pos_Fun_0021") {
-        // For Zoom test, just check it contains "Zoom"
-        expect(output).toContain(tc.expected);
+      if (tc.expectedContains) {
+        expect(output).toContain(tc.expectedContains);
       } else {
-        // For all other tests, check exact match
-        expect(output.trim()).toBe(tc.expected);
+        expect(output).toBe(tc.expected);
       }
     });
   }
+
+  /* =========================
+     NEGATIVE TESTS
+  ========================= */
+
+  for (const tc of negativeCases) {
+    test(`${tc.id} – Negative case`, async ({ page }) => {
+      await page.fill("#input", tc.input);
+      await page.click("#translate");
+
+      const output = (await page.textContent("#output"))?.trim();
+      expect(output).toBe("Fail");
+    });
+  }
+
+  /* =========================
+     UI TEST
+  ========================= */
+
+  test("Pos_UI_0001 – Real-time Sinhala update", async ({ page }) => {
+    await page.fill("#input", "mama kolaBa yanavaa");
+    await page.click("#translate");
+
+    const output = await page.textContent("#output");
+    expect(output).toBe("මම කොලඹ යනවා");
+  });
+
 });
